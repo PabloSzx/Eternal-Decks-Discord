@@ -21,6 +21,7 @@ const users = {
 
 client.connect({
   token: process.env.token
+  // token: 'Mjg3NzczODQ0OTMwODIyMTQ0.C50J1g.Ghuj21Hqv36Wk3HcWXQ2I9U5aUo' //test server
 });
 
 client.Dispatcher.on(Events.GATEWAY_READY, e => {
@@ -28,7 +29,8 @@ client.Dispatcher.on(Events.GATEWAY_READY, e => {
 });
 
 client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
-  if (e.message.author.username !== 'Eternal-Decks') {
+  if (e.message.author.username !== 'Eternal-Draft') {
+  // console.log(e);
   let user = parseInt(e.message.author.id);
   console.log(`${e.message.author.username} ${e.message.author.id}`);
   const content = e.message.content;
@@ -42,7 +44,11 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
       [name]: clipboard
     });
 
-    e.message.channel.sendMessage('Deck creado satisfactoriamente a nombre de: \'' + name + '\'');
+    e.message.author.openDM().then((channel, error) => {
+      channel.sendMessage('Deck creado satisfactoriamente a nombre de: \'' + name + '\'');
+    });
+
+    // e.message.channel.sendMessage('Deck creado satisfactoriamente a nombre de: \'' + name + '\'');
   } else if (content.toLowerCase().trim().substring(0, 5) === '!deck') {
     if (!content.substring(5).trim()) {
       firebase.database().ref().once('value', (snapshot) => {
@@ -51,15 +57,24 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
         _.map(decks, (value, key) => {
           msg = `${msg}\n:white_small_square:${key}`;
         });
-        e.message.channel.sendMessage(msg);
+        e.message.author.openDM().then((channel, error) => {
+          channel.sendMessage(msg);
+        });
+        // e.message.channel.sendMessage(msg);
       });
     } else {
     var name = firebase.database().ref(content.substring(5).trim().toLowerCase());
     name.once('value', (snapshot) => {
       if (snapshot.val()) {
-        e.message.channel.sendMessage(snapshot.val());
+        e.message.author.openDM().then((channel, error) => {
+          channel.sendMessage(snapshot.val());
+        });
+        // e.message.channel.sendMessage(snapshot.val());
       } else {
-        e.message.channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + content.substring(5).trim().toLowerCase());
+        e.message.author.openDM().then((channel, error) => {
+          channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + content.substring(5).trim().toLowerCase());
+        });
+        // e.message.channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + content.substring(5).trim().toLowerCase());
         firebase.database().ref().once('value', (snapshot) => {
           const decks = snapshot.val();
           let msg = 'Pero se han encontrado los siguientes deck con ' + content.substring(5).trim().toLowerCase() + '\n';
@@ -73,7 +88,10 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
             }
           });
           if (found) {
-            e.message.channel.sendMessage(msg);
+            e.message.author.openDM().then((channel, error) => {
+              channel.sendMessage(msg);
+            });
+            // e.message.channel.sendMessage(msg);
           }
         })
       }
