@@ -12,6 +12,9 @@ var app = firebase.initializeApp({
 const Events = Discordie.Events;
 const client = new Discordie();
 
+var history = {
+};
+
 const users = {
   215658764097945601: 'PabloSz',
   194835926533275648: 'mishiDsD',
@@ -28,11 +31,41 @@ client.Dispatcher.on(Events.GATEWAY_READY, e => {
   console.log('Conectado como: ' + client.User.username);
 });
 
+client.Dispatcher.on(Events.TYPING_START, e => {
+  try {
+  const user = e.user.username;
+  const id = e.user.id;
+  if (history[user] === undefined) {
+    history[user] = false;
+    console.log('Registro de usuarios incrementado.');
+    console.log(history);
+  }
+  if (e.channel.isPrivate && (history[user] === false)) {
+    console.log(user + ' ha conversado conmigo en privado por primera vez.');
+    let msg = 'Hola! :wave: Al conversar conmigo por mensaje privado ' +
+    'no es necesario que me escribas con \"!deck\", aqui ' +
+    'puedes escribir directamente el nombre del deck y te dare el deck listo para importarlo en el juego.'
+    e.channel.sendMessage(msg);
+    if (users[parseInt(id)]) {
+      msg = '\n\nPero si deseas meter un deck en la base de datos, aun tienes que escribir ' +
+      '\"!crear-deck <nombre del deck (si se permiten espacios)> <salto de linea (solo un salto de linea)> <clipboard del deck>\"' +
+      '\n(Sin los \'<>\')'
+      e.channel.sendMessage(msg);
+    }
+    history[user] = true;
+  }
+
+} catch (err) {
+  //empty
+}
+});
+
 client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
-  if (e.message.author.username !== 'Eternal-Draft') {
+  try {
+  if (e.message.author.username !== 'Eternal-Decks') {
   // console.log(e);
   let user = parseInt(e.message.author.id);
-  console.log(`${e.message.author.username} ${e.message.author.id}`);
+  // console.log(`${e.message.author.username} ${e.message.author.id}`);
   const content = e.message.content;
   // console.log(e);
   if ((content.trim().substring(0, 11) === '!crear-deck') && (users[user])) {
@@ -49,8 +82,15 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
     });
 
     // e.message.channel.sendMessage('Deck creado satisfactoriamente a nombre de: \'' + name + '\'');
-  } else if (content.toLowerCase().trim().substring(0, 5) === '!deck') {
-    if (!content.substring(5).trim()) {
+  } else if ((content.toLowerCase().trim().substring(0, 5) === '!deck') || e.message.isPrivate) {
+    let input = '';
+    if (!(content.toLowerCase().trim().substring(0, 5) === '!deck') && (e.message.isPrivate)) {
+      input = content.trim();
+    } else {
+      input = content.substring(5).trim();
+    }
+    // const name = content.substring(5).trim();
+    if (!input) {
       firebase.database().ref().once('value', (snapshot) => {
         const decks = snapshot.val();
         let msg = 'Decks disponibles:';
@@ -63,7 +103,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
         // e.message.channel.sendMessage(msg);
       });
     } else {
-    var name = firebase.database().ref(content.substring(5).trim().toLowerCase());
+    var name = firebase.database().ref(input.toLowerCase().trim());
     name.once('value', (snapshot) => {
       if (snapshot.val()) {
         e.message.author.openDM().then((channel, error) => {
@@ -72,15 +112,15 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
         // e.message.channel.sendMessage(snapshot.val());
       } else {
         e.message.author.openDM().then((channel, error) => {
-          channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + content.substring(5).trim().toLowerCase());
+          channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + input.toLowerCase());
         });
         // e.message.channel.sendMessage('No se ha encontrado ningun deck en especifico a nombre de ' + content.substring(5).trim().toLowerCase());
         firebase.database().ref().once('value', (snapshot) => {
           const decks = snapshot.val();
-          let msg = 'Pero se han encontrado los siguientes deck con ' + content.substring(5).trim().toLowerCase() + '\n';
+          let msg = 'Pero se han encontrado los siguientes deck con ' + input.toLowerCase() + '\n';
           let found = false;
           _.map(decks, (value, key) => {
-            if (key.toLowerCase().indexOf(content.substring(5).trim().toLowerCase()) !== -1) {
+            if (key.toLowerCase().indexOf(input.toLowerCase()) !== -1) {
               if (!found) {
                 found = true;
               }
@@ -100,5 +140,9 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
     }
   }
 
+}
+
+} catch (err) {
+  //empty
 }
 });
