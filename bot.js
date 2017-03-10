@@ -19,7 +19,8 @@ const users = {
   215658764097945601: 'PabloSz',
   194835926533275648: 'mishiDsD',
   281464881880891394: 'Sneaky',
-  156050903546200064: 'EpithSlayer'
+  156050903546200064: 'EpithSlayer',
+  285088494869544962: 'mibaito'
 }
 
 client.connect({
@@ -48,7 +49,7 @@ client.Dispatcher.on(Events.TYPING_START, e => {
     e.channel.sendMessage(msg);
     if (users[parseInt(id)]) {
       msg = '\n\nPero si deseas meter un deck en la base de datos, aun tienes que escribir ' +
-      '\"!crear-deck <nombre del deck (si se permiten espacios)> <salto de linea (solo un salto de linea)> <clipboard del deck>\"' +
+      '\n\n\"!crear-deck <nombre del deck (si se permiten espacios)> <un salto de linea (shift+enter)> <clipboard del deck>\"' +
       '\n(Sin los \'<>\')'
       e.channel.sendMessage(msg);
     }
