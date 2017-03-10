@@ -13,6 +13,8 @@ const Events = Discordie.Events;
 const client = new Discordie();
 
 var history = {
+  PabloSz: true,
+  mibaito: true
 };
 
 const users = {
@@ -38,8 +40,8 @@ client.Dispatcher.on(Events.TYPING_START, e => {
   const id = e.user.id;
   if (history[user] === undefined) {
     history[user] = false;
-    console.log('Registro de usuarios incrementado.');
-    console.log(history);
+    // console.log('Registro de usuarios incrementado.');
+    // console.log(history);
   }
   if (e.channel.isPrivate && (history[user] === false)) {
     console.log(user + ' ha conversado conmigo en privado por primera vez.');
@@ -65,6 +67,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
   try {
   if (e.message.author.username !== 'Eternal-Decks') {
   // console.log(e);
+  let share = false;
   let user = parseInt(e.message.author.id);
   // console.log(`${e.message.author.username} ${e.message.author.id}`);
   const content = e.message.content;
@@ -87,7 +90,11 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
     let input = '';
     if (!(content.toLowerCase().trim().substring(0, 5) === '!deck') && (e.message.isPrivate)) {
       input = content.trim();
-    } else {
+    } else if(content.toLowerCase().trim().substring(0, 15) === '!deck-compartir') {
+      input = content.substring(16).trim();
+      share = true;
+    }
+    else {
       input = content.substring(5).trim();
     }
     // const name = content.substring(5).trim();
@@ -107,9 +114,14 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
     var name = firebase.database().ref(input.toLowerCase().trim());
     name.once('value', (snapshot) => {
       if (snapshot.val()) {
-        e.message.author.openDM().then((channel, error) => {
-          channel.sendMessage(snapshot.val());
-        });
+        if (!share) {
+          e.message.author.openDM().then((channel, error) => {
+            channel.sendMessage(snapshot.val());
+          });
+        } else {
+          e.message.channel.sendMessage(snapshot.val());
+        }
+
         // e.message.channel.sendMessage(snapshot.val());
       } else {
         e.message.author.openDM().then((channel, error) => {
