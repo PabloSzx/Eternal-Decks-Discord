@@ -32,6 +32,17 @@ client.connect({
 
 client.Dispatcher.on(Events.GATEWAY_READY, e => {
   console.log('Conectado como: ' + client.User.username);
+  client.Users.fetchMembers().then(() => {
+    // console.log(client.Users.membersForChannel('281797507070164992'));
+    // console.log(client.Users.get('287974333559865345'));
+    client.Users.get('287974333559865345').openDM().then((channel, error) => {
+      channel.sendMessage('PING');
+      console.log('PING');
+    })
+  });
+  // client.Users.get('<@287974333559865345>').openDM().then(() => {
+  //   console.log('asdasdasd');
+  // })
 });
 
 client.Dispatcher.on(Events.TYPING_START, e => {
@@ -71,6 +82,13 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
   let user = parseInt(e.message.author.id);
   // console.log(`${e.message.author.username} ${e.message.author.id}`);
   const content = e.message.content;
+
+  if (e.message.isPrivate && (content.trim() === 'PONG')) {
+    setTimeout(() => {
+      e.message.channel.sendMessage('PING');
+      console.log('PING');
+    }, 600000);
+  } else if (user !== 287974333559865345) {
   // console.log(e);
   if ((content.trim().substring(0, 11) === '!crear-deck') && (users[user])) {
     // msg = content.substring(7).trim().split(' ');
@@ -152,7 +170,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e => {
 
     }
   }
-
+}
 }
 
 } catch (err) {
